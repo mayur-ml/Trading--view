@@ -5,6 +5,12 @@ This repository contains custom Pine Script indicators designed to combine multi
 
 ![TradingView Indicator](https://www.wallstreetzen.com/blog/wp-content/uploads/2022/09/T8jrtz3q_mid.png)
 
+## Want to Contribute?
+
+If you have more insights about technical indicators or ideas for improving existing ones, we welcome contributions! Feel free to fork the repository, make your changes, and submit a pull request. We appreciate your input and collaboration in making these indicators even better.
+
+If you encounter any issues or have feature requests, please don't hesitate to open an issue on GitHub. We're here to help and improve together.
+
 
 ## 1. 3/5 EMA and UT Bot Alerts with Trend Alart
 

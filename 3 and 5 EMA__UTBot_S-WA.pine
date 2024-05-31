@@ -1,0 +1,71 @@
+//@version=5
+indicator("Combined 3EMA and UT Bot Alerts with 5 EMA  Trend alart", shorttitle="3/5EMA_UTBot_TS-WA", overlay=true)
+
+// Inputs for EMAs
+EMA1 = input.int(50, minval=1, title="EMA1")
+EMA2 = input.int(100, minval=1, title="EMA2")
+EMA3 = input.int(200, minval=1, title="EMA3")
+EMA4 = input.int(5, minval=1, title="EMA4")
+
+// Plot EMAs
+plot(ta.ema(close, EMA1), color=color.red, linewidth=2)
+plot(ta.ema(close, EMA2), color=color.yellow, linewidth=2)
+plot(ta.ema(close, EMA3), color=color.purple, linewidth=2)
+plot(ta.ema(close, EMA4), color=color.blue, linewidth=2)
+
+// Inputs for UT Bot Alerts
+a = input.int(1, title="Key Value (sensitivity)")
+c = input.int(10, title="ATR Period")
+h = input.bool(false, title="Signals from Heikin Ashi Candles")
+
+xATR = ta.atr(c)
+nLoss = a * xATR
+
+src = h ? request.security(syminfo.tickerid, timeframe.period, close, lookahead=barmerge.lookahead_off) : close
+
+var float xATRTrailingStop = na
+if na(xATRTrailingStop[1])
+    xATRTrailingStop := src
+else
+    if src > xATRTrailingStop[1] and src[1] > xATRTrailingStop[1]
+        xATRTrailingStop := math.max(xATRTrailingStop[1], src - nLoss)
+    else if src < xATRTrailingStop[1] and src[1] < xATRTrailingStop[1]
+        xATRTrailingStop := math.min(xATRTrailingStop[1], src + nLoss)
+    else
+        xATRTrailingStop := src > xATRTrailingStop[1] ? src - nLoss : src + nLoss
+
+var int pos = na
+if na(pos[1])
+    pos := na
+else
+    if src[1] < xATRTrailingStop[1] and src > xATRTrailingStop[1]
+        pos := 1
+    else if src[1] > xATRTrailingStop[1] and src < xATRTrailingStop[1]
+        pos := -1
+    else
+        pos := pos[1]
+
+xcolor = pos == -1 ? color.red : pos == 1 ? color.green : color.blue
+
+ema_1 = ta.ema(src, 1)
+above = ta.crossover(ema_1, xATRTrailingStop)
+below = ta.crossover(xATRTrailingStop, ema_1)
+
+buy = src > xATRTrailingStop and above
+sell = src < xATRTrailingStop and below
+
+barbuy = src > xATRTrailingStop
+barsell = src < xATRTrailingStop
+
+plotshape(buy, title="Buy", text='Buy', style=shape.labelup, location=location.belowbar, color=color.green, textcolor=color.white, size=size.tiny)
+plotshape(sell, title="Sell", text='Sell', style=shape.labeldown, location=location.abovebar, color=color.red, textcolor=color.white, size=size.tiny)
+
+barcolor(barbuy ? color.green : na)
+barcolor(barsell ? color.red : na)
+
+alertcondition(buy, title="UT Long", message="UT Long")
+alertcondition(sell, title="UT Short", message="UT Short")
+
+// Additional alert for "red signal"
+alertcondition(barsell, title="Red Signal Alert", message="Red Signal: Consider Selling")
+
